@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+option go_package = "labgrab/user_service/api/proto";
+
+package proto;
+
+service UserService {
+  // User management
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc GetUserDetails(GetUserDetailsRequest) returns (GetUserDetailsResponse);
+  rpc GetUserContacts(GetUserContactsRequest) returns (GetUserContactsResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+  // User details management
+  rpc CreateUserDetails(CreateUserDetailsRequest) returns (CreateUserDetailsResponse);
+  rpc UpdateUserName(UpdateUserNameRequest) returns (UpdateUserNameResponse);
+  rpc UpdateUserSurname(UpdateUserSurnameRequest) returns (UpdateUserSurnameResponse);
+  rpc UpdateUserPatronymic(UpdateUserPatronymicRequest) returns (UpdateUserPatronymicResponse);
+  rpc UpdateUserGroupCode(UpdateUserGroupCodeRequest) returns (UpdateUserGroupCodeResponse);
+
+  // User contacts management
+  rpc CreateUserContacts(CreateUserContactsRequest) returns (CreateUserContactsResponse);
+  rpc UpdateUserPhoneNumber(UpdateUserPhoneNumberRequest) returns (UpdateUserPhoneNumberResponse);
+  rpc UpdateUserEmail(UpdateUserEmailRequest) returns (UpdateUserEmailResponse);
+  rpc UpdateUserTelegramID(UpdateUserTelegramIDRequest) returns (UpdateUserTelegramIDResponse);
+}
+
+// Messages
+message User {
+  string uuid = 1;
+}
+
+message UserDetails {
+  string name = 1;
+  string surname = 2;
+  optional string patronymic = 3;
+  string group_code = 4;
+  string user_uuid = 5;
+}
+
+message UserContacts {
+  string phone_number = 1;
+  optional string email = 2;
+  optional int64 telegram_id = 3;
+  string user_uuid = 4;
+}
+
+// CreateUser
+message CreateUserRequest {
+  string uuid = 1;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+// GetUserDetails
+message GetUserDetailsRequest {
+  string user_uuid = 1;
+}
+
+message GetUserDetailsResponse {
+  UserDetails details = 1;
+}
+
+// GetUserContacts
+message GetUserContactsRequest {
+  string user_uuid = 1;
+}
+
+message GetUserContactsResponse {
+  UserContacts contacts = 1;
+}
+
+// DeleteUser
+message DeleteUserRequest {
+  string uuid = 1;
+}
+
+message DeleteUserResponse {}
+
+// CreateUserDetails
+message CreateUserDetailsRequest {
+  string name = 1;
+  string surname = 2;
+  optional string patronymic = 3;
+  string group_code = 4;
+  string user_uuid = 5;
+}
+
+message CreateUserDetailsResponse {
+  UserDetails details = 1;
+}
+
+// UpdateUserName
+message UpdateUserNameRequest {
+  string user_uuid = 1;
+  string name = 2;
+}
+
+message UpdateUserNameResponse {
+  UserDetails details = 1;
+}
+
+// UpdateUserSurname
+message UpdateUserSurnameRequest {
+  string user_uuid = 1;
+  string surname = 2;
+}
+
+message UpdateUserSurnameResponse {
+  UserDetails details = 1;
+}
+
+// UpdateUserPatronymic
+message UpdateUserPatronymicRequest {
+  string user_uuid = 1;
+  optional string patronymic = 2;
+}
+
+message UpdateUserPatronymicResponse {
+  UserDetails details = 1;
+}
+
+// UpdateUserGroupCode
+message UpdateUserGroupCodeRequest {
+  string user_uuid = 1;
+  string group_code = 2;
+}
+
+message UpdateUserGroupCodeResponse {
+  UserDetails details = 1;
+}
+
+// CreateUserContacts
+message CreateUserContactsRequest {
+  string phone_number = 1;
+  optional string email = 2;
+  optional int64 telegram_id = 3;
+  string user_uuid = 4;
+}
+
+message CreateUserContactsResponse {
+  UserContacts contacts = 1;
+}
+
+// UpdateUserPhoneNumber
+message UpdateUserPhoneNumberRequest {
+  string user_uuid = 1;
+  string phone_number = 2;
+}
+
+message UpdateUserPhoneNumberResponse {
+  UserContacts contacts = 1;
+}
+
+// UpdateUserEmail
+message UpdateUserEmailRequest {
+  string user_uuid = 1;
+  optional string email = 2;
+}
+
+message UpdateUserEmailResponse {
+  UserContacts contacts = 1;
+}
+
+// UpdateUserTelegramID
+message UpdateUserTelegramIDRequest {
+  string user_uuid = 1;
+  optional int64 telegram_id = 2;
+}
+
+message UpdateUserTelegramIDResponse {
+  UserContacts contacts = 1;
+}
