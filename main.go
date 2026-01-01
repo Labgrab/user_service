@@ -2,27 +2,28 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"labgrab/user_service/api/proto"
 	"labgrab/user_service/internal/repository/sqlc"
 	"labgrab/user_service/internal/service"
 	"labgrab/user_service/pkg/config"
 	"log"
 	"net"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/caarlos0/env/v11"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc"
 )
 
 func main() {
+	fmt.Println(os.Getenv("PORT"))
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	var cfg config.Config
-	err := env.Parse(&cfg)
+	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to parse .env: %v", err)
 	}
