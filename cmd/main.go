@@ -5,12 +5,14 @@ import (
 	"labgrab/user_service/api/proto"
 	"labgrab/user_service/internal/repository/sqlc"
 	"labgrab/user_service/internal/service"
+	"labgrab/user_service/pkg/config"
 	"log"
 	"net"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc"
 )
@@ -19,7 +21,18 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	conn, err := pgx.ConnectConfig(pgx.ConnConfig{})
+	var cfg config.Config
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Fatalf("Failed to parse .env: %v", err)
+	}
+
+	pgconfig, err := pgx.ParseConfig(cfg.DBConn)
+	if err != nil {
+		log.Fatalf("Failed to parse DB connection string: %v", err)
+	}
+
+	conn, err := pgx.ConnectConfig(ctx, pgconfig)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v", err)
 	}
