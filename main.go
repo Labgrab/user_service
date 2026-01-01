@@ -42,25 +42,27 @@ func main() {
 		Repo: repo,
 	}
 
-	lis, err := net.Listen("tcp", ":5051")
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
-		log.Fatalf("failed to listen on port 5051: %v", err)
+		log.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
 	proto.RegisterUserServiceServer(s, svc)
 
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	go func() {
+		<-ctx.Done()
+		timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer timeoutCancel()
+
+		s.GracefulStop()
+		if err := conn.Close(timeoutCtx); err != nil {
+			log.Fatalf("failed to close DB connection: %v", err)
+		}
+	}()
 
 	log.Println("server started")
-	<-ctx.Done()
-	timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer timeoutCancel()
-
-	s.GracefulStop()
-	if err := conn.Close(timeoutCtx); err != nil {
-		log.Fatalf("failed to close DB connection: %v", err)
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
 	}
 }
