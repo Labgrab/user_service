@@ -16,7 +16,7 @@ import (
 
 type Service struct {
 	proto.UnimplementedUserServiceServer
-	repo *sqlc.Queries
+	Repo *sqlc.Queries
 }
 
 func (s *Service) CreateUser(ctx context.Context, req *proto.CreateUserRequest) (*proto.CreateUserResponse, error) {
@@ -25,7 +25,7 @@ func (s *Service) CreateUser(ctx context.Context, req *proto.CreateUserRequest) 
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	createdUUID, err := s.repo.CreateUser(ctx, userUUID)
+	createdUUID, err := s.Repo.CreateUser(ctx, userUUID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
 	}
@@ -37,14 +37,13 @@ func (s *Service) CreateUser(ctx context.Context, req *proto.CreateUserRequest) 
 	}, nil
 }
 
-// GetUserDetails retrieves user details by UUID
 func (s *Service) GetUserDetails(ctx context.Context, req *proto.GetUserDetailsRequest) (*proto.GetUserDetailsResponse, error) {
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	details, err := s.repo.GetUserDetails(ctx, userUUID)
+	details, err := s.Repo.GetUserDetails(ctx, userUUID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Errorf(codes.NotFound, "user details not found")
@@ -68,14 +67,13 @@ func (s *Service) GetUserDetails(ctx context.Context, req *proto.GetUserDetailsR
 	return response, nil
 }
 
-// GetUserContacts retrieves user contacts by UUID
 func (s *Service) GetUserContacts(ctx context.Context, req *proto.GetUserContactsRequest) (*proto.GetUserContactsResponse, error) {
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	contacts, err := s.repo.GetUserContacts(ctx, userUUID)
+	contacts, err := s.Repo.GetUserContacts(ctx, userUUID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Errorf(codes.NotFound, "user contacts not found")
@@ -101,23 +99,20 @@ func (s *Service) GetUserContacts(ctx context.Context, req *proto.GetUserContact
 	return response, nil
 }
 
-// DeleteUser deletes a user by UUID
 func (s *Service) DeleteUser(ctx context.Context, req *proto.DeleteUserRequest) (*proto.DeleteUserResponse, error) {
 	userUUID, err := uuid.Parse(req.Uuid)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	if err := s.repo.DeleteUser(ctx, userUUID); err != nil {
+	if err := s.Repo.DeleteUser(ctx, userUUID); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to delete user: %v", err)
 	}
 
 	return &proto.DeleteUserResponse{}, nil
 }
 
-// CreateUserDetails creates user details with validation
 func (s *Service) CreateUserDetails(ctx context.Context, req *proto.CreateUserDetailsRequest) (*proto.CreateUserDetailsResponse, error) {
-	// Validate input
 	if !ValidateAlphabeticString(req.Name) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid name format")
 	}
@@ -136,7 +131,6 @@ func (s *Service) CreateUserDetails(ctx context.Context, req *proto.CreateUserDe
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	// Prepare parameters
 	params := sqlc.CreateUserDetailsParams{
 		Name:      req.Name,
 		Surname:   req.Surname,
@@ -151,7 +145,7 @@ func (s *Service) CreateUserDetails(ctx context.Context, req *proto.CreateUserDe
 		})
 	}
 
-	details, err := s.repo.CreateUserDetails(ctx, params)
+	details, err := s.Repo.CreateUserDetails(ctx, params)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create user details: %v", err)
 	}
@@ -172,7 +166,6 @@ func (s *Service) CreateUserDetails(ctx context.Context, req *proto.CreateUserDe
 	return response, nil
 }
 
-// UpdateUserName updates user's name
 func (s *Service) UpdateUserName(ctx context.Context, req *proto.UpdateUserNameRequest) (*proto.UpdateUserNameResponse, error) {
 	if !ValidateAlphabeticString(req.Name) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid name format")
@@ -183,7 +176,7 @@ func (s *Service) UpdateUserName(ctx context.Context, req *proto.UpdateUserNameR
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	details, err := s.repo.UpdateUserName(ctx, sqlc.UpdateUserNameParams{
+	details, err := s.Repo.UpdateUserName(ctx, sqlc.UpdateUserNameParams{
 		UserUuid: userUUID,
 		Name:     req.Name,
 	})
@@ -210,7 +203,6 @@ func (s *Service) UpdateUserName(ctx context.Context, req *proto.UpdateUserNameR
 	return response, nil
 }
 
-// UpdateUserSurname updates user's surname
 func (s *Service) UpdateUserSurname(ctx context.Context, req *proto.UpdateUserSurnameRequest) (*proto.UpdateUserSurnameResponse, error) {
 	if !ValidateAlphabeticString(req.Surname) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid surname format")
@@ -221,7 +213,7 @@ func (s *Service) UpdateUserSurname(ctx context.Context, req *proto.UpdateUserSu
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	details, err := s.repo.UpdateUserSurname(ctx, sqlc.UpdateUserSurnameParams{
+	details, err := s.Repo.UpdateUserSurname(ctx, sqlc.UpdateUserSurnameParams{
 		UserUuid: userUUID,
 		Surname:  req.Surname,
 	})
@@ -248,7 +240,6 @@ func (s *Service) UpdateUserSurname(ctx context.Context, req *proto.UpdateUserSu
 	return response, nil
 }
 
-// UpdateUserPatronymic updates user's patronymic
 func (s *Service) UpdateUserPatronymic(ctx context.Context, req *proto.UpdateUserPatronymicRequest) (*proto.UpdateUserPatronymicResponse, error) {
 	if req.Patronymic != nil && !ValidateAlphabeticString(*req.Patronymic) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid patronymic format")
@@ -270,7 +261,7 @@ func (s *Service) UpdateUserPatronymic(ctx context.Context, req *proto.UpdateUse
 		})
 	}
 
-	details, err := s.repo.UpdateUserPatronymic(ctx, params)
+	details, err := s.Repo.UpdateUserPatronymic(ctx, params)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Errorf(codes.NotFound, "user details not found")
@@ -294,7 +285,6 @@ func (s *Service) UpdateUserPatronymic(ctx context.Context, req *proto.UpdateUse
 	return response, nil
 }
 
-// UpdateUserGroupCode updates user's group code
 func (s *Service) UpdateUserGroupCode(ctx context.Context, req *proto.UpdateUserGroupCodeRequest) (*proto.UpdateUserGroupCodeResponse, error) {
 	if !ValidateGroupCode(req.GroupCode) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid group code format")
@@ -305,7 +295,7 @@ func (s *Service) UpdateUserGroupCode(ctx context.Context, req *proto.UpdateUser
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	details, err := s.repo.UpdateUserGroupCode(ctx, sqlc.UpdateUserGroupCodeParams{
+	details, err := s.Repo.UpdateUserGroupCode(ctx, sqlc.UpdateUserGroupCodeParams{
 		UserUuid:  userUUID,
 		GroupCode: req.GroupCode,
 	})
@@ -332,7 +322,6 @@ func (s *Service) UpdateUserGroupCode(ctx context.Context, req *proto.UpdateUser
 	return response, nil
 }
 
-// CreateUserContacts creates user contacts with validation
 func (s *Service) CreateUserContacts(ctx context.Context, req *proto.CreateUserContactsRequest) (*proto.CreateUserContactsResponse, error) {
 	if !ValidatePhoneNumber(req.PhoneNumber) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid phone number format")
@@ -366,7 +355,7 @@ func (s *Service) CreateUserContacts(ctx context.Context, req *proto.CreateUserC
 		})
 	}
 
-	contacts, err := s.repo.CreateUserContacts(ctx, params)
+	contacts, err := s.Repo.CreateUserContacts(ctx, params)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create user contacts: %v", err)
 	}
@@ -389,7 +378,6 @@ func (s *Service) CreateUserContacts(ctx context.Context, req *proto.CreateUserC
 	return response, nil
 }
 
-// UpdateUserPhoneNumber updates user's phone number
 func (s *Service) UpdateUserPhoneNumber(ctx context.Context, req *proto.UpdateUserPhoneNumberRequest) (*proto.UpdateUserPhoneNumberResponse, error) {
 	if !ValidatePhoneNumber(req.PhoneNumber) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid phone number format")
@@ -400,7 +388,7 @@ func (s *Service) UpdateUserPhoneNumber(ctx context.Context, req *proto.UpdateUs
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
-	contacts, err := s.repo.UpdateUserPhoneNumber(ctx, sqlc.UpdateUserPhoneNumberParams{
+	contacts, err := s.Repo.UpdateUserPhoneNumber(ctx, sqlc.UpdateUserPhoneNumberParams{
 		UserUuid:    userUUID,
 		PhoneNumber: req.PhoneNumber,
 	})
@@ -429,7 +417,6 @@ func (s *Service) UpdateUserPhoneNumber(ctx context.Context, req *proto.UpdateUs
 	return response, nil
 }
 
-// UpdateUserEmail updates user's email
 func (s *Service) UpdateUserEmail(ctx context.Context, req *proto.UpdateUserEmailRequest) (*proto.UpdateUserEmailResponse, error) {
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
@@ -447,7 +434,7 @@ func (s *Service) UpdateUserEmail(ctx context.Context, req *proto.UpdateUserEmai
 		})
 	}
 
-	contacts, err := s.repo.UpdateUserEmail(ctx, params)
+	contacts, err := s.Repo.UpdateUserEmail(ctx, params)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Errorf(codes.NotFound, "user contacts not found")
@@ -473,7 +460,6 @@ func (s *Service) UpdateUserEmail(ctx context.Context, req *proto.UpdateUserEmai
 	return response, nil
 }
 
-// UpdateUserTelegramID updates user's Telegram ID
 func (s *Service) UpdateUserTelegramID(ctx context.Context, req *proto.UpdateUserTelegramIDRequest) (*proto.UpdateUserTelegramIDResponse, error) {
 	if req.TelegramId != nil && *req.TelegramId <= 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "telegram ID must be positive")
@@ -495,7 +481,7 @@ func (s *Service) UpdateUserTelegramID(ctx context.Context, req *proto.UpdateUse
 		})
 	}
 
-	contacts, err := s.repo.UpdateUserTelegramID(ctx, params)
+	contacts, err := s.Repo.UpdateUserTelegramID(ctx, params)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Errorf(codes.NotFound, "user contacts not found")
