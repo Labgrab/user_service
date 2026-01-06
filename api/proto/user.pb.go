@@ -877,7 +877,7 @@ func (x *UpdateUserSurnameResponse) GetDetails() *UserDetails {
 type UpdateUserPatronymicRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserUuid      string                 `protobuf:"bytes,1,opt,name=user_uuid,json=userUuid,proto3" json:"user_uuid,omitempty"`
-	Patronymic    *string                `protobuf:"bytes,2,opt,name=patronymic,proto3,oneof" json:"patronymic,omitempty"`
+	Patronymic    string                 `protobuf:"bytes,2,opt,name=patronymic,proto3" json:"patronymic,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -920,8 +920,8 @@ func (x *UpdateUserPatronymicRequest) GetUserUuid() string {
 }
 
 func (x *UpdateUserPatronymicRequest) GetPatronymic() string {
-	if x != nil && x.Patronymic != nil {
-		return *x.Patronymic
+	if x != nil {
+		return x.Patronymic
 	}
 	return ""
 }
@@ -1281,7 +1281,7 @@ func (x *UpdateUserPhoneNumberResponse) GetContacts() *UserContacts {
 type UpdateUserEmailRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserUuid      string                 `protobuf:"bytes,1,opt,name=user_uuid,json=userUuid,proto3" json:"user_uuid,omitempty"`
-	Email         *string                `protobuf:"bytes,2,opt,name=email,proto3,oneof" json:"email,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1324,8 +1324,8 @@ func (x *UpdateUserEmailRequest) GetUserUuid() string {
 }
 
 func (x *UpdateUserEmailRequest) GetEmail() string {
-	if x != nil && x.Email != nil {
-		return *x.Email
+	if x != nil {
+		return x.Email
 	}
 	return ""
 }
@@ -1378,7 +1378,7 @@ func (x *UpdateUserEmailResponse) GetContacts() *UserContacts {
 type UpdateUserTelegramIDRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserUuid      string                 `protobuf:"bytes,1,opt,name=user_uuid,json=userUuid,proto3" json:"user_uuid,omitempty"`
-	TelegramId    *int64                 `protobuf:"varint,2,opt,name=telegram_id,json=telegramId,proto3,oneof" json:"telegram_id,omitempty"`
+	TelegramId    int64                  `protobuf:"varint,2,opt,name=telegram_id,json=telegramId,proto3" json:"telegram_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1421,8 +1421,8 @@ func (x *UpdateUserTelegramIDRequest) GetUserUuid() string {
 }
 
 func (x *UpdateUserTelegramIDRequest) GetTelegramId() int64 {
-	if x != nil && x.TelegramId != nil {
-		return *x.TelegramId
+	if x != nil {
+		return x.TelegramId
 	}
 	return 0
 }
@@ -1533,13 +1533,12 @@ const file_user_proto_rawDesc = "" +
 	"\tuser_uuid\x18\x01 \x01(\tR\buserUuid\x12\x18\n" +
 	"\asurname\x18\x02 \x01(\tR\asurname\"I\n" +
 	"\x19UpdateUserSurnameResponse\x12,\n" +
-	"\adetails\x18\x01 \x01(\v2\x12.proto.UserDetailsR\adetails\"n\n" +
+	"\adetails\x18\x01 \x01(\v2\x12.proto.UserDetailsR\adetails\"Z\n" +
 	"\x1bUpdateUserPatronymicRequest\x12\x1b\n" +
-	"\tuser_uuid\x18\x01 \x01(\tR\buserUuid\x12#\n" +
+	"\tuser_uuid\x18\x01 \x01(\tR\buserUuid\x12\x1e\n" +
 	"\n" +
-	"patronymic\x18\x02 \x01(\tH\x00R\n" +
-	"patronymic\x88\x01\x01B\r\n" +
-	"\v_patronymic\"L\n" +
+	"patronymic\x18\x02 \x01(\tR\n" +
+	"patronymic\"L\n" +
 	"\x1cUpdateUserPatronymicResponse\x12,\n" +
 	"\adetails\x18\x01 \x01(\v2\x12.proto.UserDetailsR\adetails\"X\n" +
 	"\x1aUpdateUserGroupCodeRequest\x12\x1b\n" +
@@ -1562,18 +1561,16 @@ const file_user_proto_rawDesc = "" +
 	"\tuser_uuid\x18\x01 \x01(\tR\buserUuid\x12!\n" +
 	"\fphone_number\x18\x02 \x01(\tR\vphoneNumber\"P\n" +
 	"\x1dUpdateUserPhoneNumberResponse\x12/\n" +
-	"\bcontacts\x18\x01 \x01(\v2\x13.proto.UserContactsR\bcontacts\"Z\n" +
+	"\bcontacts\x18\x01 \x01(\v2\x13.proto.UserContactsR\bcontacts\"K\n" +
 	"\x16UpdateUserEmailRequest\x12\x1b\n" +
-	"\tuser_uuid\x18\x01 \x01(\tR\buserUuid\x12\x19\n" +
-	"\x05email\x18\x02 \x01(\tH\x00R\x05email\x88\x01\x01B\b\n" +
-	"\x06_email\"J\n" +
+	"\tuser_uuid\x18\x01 \x01(\tR\buserUuid\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\"J\n" +
 	"\x17UpdateUserEmailResponse\x12/\n" +
-	"\bcontacts\x18\x01 \x01(\v2\x13.proto.UserContactsR\bcontacts\"p\n" +
+	"\bcontacts\x18\x01 \x01(\v2\x13.proto.UserContactsR\bcontacts\"[\n" +
 	"\x1bUpdateUserTelegramIDRequest\x12\x1b\n" +
-	"\tuser_uuid\x18\x01 \x01(\tR\buserUuid\x12$\n" +
-	"\vtelegram_id\x18\x02 \x01(\x03H\x00R\n" +
-	"telegramId\x88\x01\x01B\x0e\n" +
-	"\f_telegram_id\"O\n" +
+	"\tuser_uuid\x18\x01 \x01(\tR\buserUuid\x12\x1f\n" +
+	"\vtelegram_id\x18\x02 \x01(\x03R\n" +
+	"telegramId\"O\n" +
 	"\x1cUpdateUserTelegramIDResponse\x12/\n" +
 	"\bcontacts\x18\x01 \x01(\v2\x13.proto.UserContactsR\bcontacts2\xe4\b\n" +
 	"\vUserService\x12A\n" +
@@ -1691,10 +1688,7 @@ func file_user_proto_init() {
 	file_user_proto_msgTypes[1].OneofWrappers = []any{}
 	file_user_proto_msgTypes[2].OneofWrappers = []any{}
 	file_user_proto_msgTypes[11].OneofWrappers = []any{}
-	file_user_proto_msgTypes[17].OneofWrappers = []any{}
 	file_user_proto_msgTypes[21].OneofWrappers = []any{}
-	file_user_proto_msgTypes[25].OneofWrappers = []any{}
-	file_user_proto_msgTypes[27].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

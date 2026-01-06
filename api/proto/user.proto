@@ -115,7 +115,7 @@ message UpdateUserSurnameResponse {
 // UpdateUserPatronymic
 message UpdateUserPatronymicRequest {
   string user_uuid = 1;
-  optional string patronymic = 2;
+  string patronymic = 2;
 }
 
 message UpdateUserPatronymicResponse {
@@ -157,7 +157,7 @@ message UpdateUserPhoneNumberResponse {
 // UpdateUserEmail
 message UpdateUserEmailRequest {
   string user_uuid = 1;
-  optional string email = 2;
+  string email = 2;
 }
 
 message UpdateUserEmailResponse {
@@ -167,7 +167,7 @@ message UpdateUserEmailResponse {
 // UpdateUserTelegramID
 message UpdateUserTelegramIDRequest {
   string user_uuid = 1;
-  optional int64 telegram_id = 2;
+  int64 telegram_id = 2;
 }
 
 message UpdateUserTelegramIDResponse {

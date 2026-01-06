@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -16,17 +17,21 @@ import (
 
 type Service struct {
 	proto.UnimplementedUserServiceServer
-	Repo *sqlc.Queries
+	Logger *zap.Logger
+	Repo   *sqlc.Queries
 }
 
 func (s *Service) CreateUser(ctx context.Context, req *proto.CreateUserRequest) (*proto.CreateUserResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.Uuid), zap.String("method", "CreateUser"))
 	userUUID, err := uuid.Parse(req.Uuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
 	createdUUID, err := s.Repo.CreateUser(ctx, userUUID)
 	if err != nil {
+		log.Error("Failed to create user", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
 	}
 
@@ -38,16 +43,20 @@ func (s *Service) CreateUser(ctx context.Context, req *proto.CreateUserRequest) 
 }
 
 func (s *Service) GetUserDetails(ctx context.Context, req *proto.GetUserDetailsRequest) (*proto.GetUserDetailsResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "GetUserDetails"))
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
 	details, err := s.Repo.GetUserDetails(ctx, userUUID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User details not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user details not found")
 		}
+		log.Error("Failed to get user details", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to get user details: %v", err)
 	}
 
@@ -68,16 +77,20 @@ func (s *Service) GetUserDetails(ctx context.Context, req *proto.GetUserDetailsR
 }
 
 func (s *Service) GetUserContacts(ctx context.Context, req *proto.GetUserContactsRequest) (*proto.GetUserContactsResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "GetUserContacts"))
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
 	contacts, err := s.Repo.GetUserContacts(ctx, userUUID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User contacts not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user contacts not found")
 		}
+		log.Error("Failed to get user contacts", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to get user contacts: %v", err)
 	}
 
@@ -100,12 +113,15 @@ func (s *Service) GetUserContacts(ctx context.Context, req *proto.GetUserContact
 }
 
 func (s *Service) DeleteUser(ctx context.Context, req *proto.DeleteUserRequest) (*proto.DeleteUserResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.Uuid), zap.String("method", "DeleteUser"))
 	userUUID, err := uuid.Parse(req.Uuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
 	if err := s.Repo.DeleteUser(ctx, userUUID); err != nil {
+		log.Error("Failed to delete user", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to delete user: %v", err)
 	}
 
@@ -113,6 +129,7 @@ func (s *Service) DeleteUser(ctx context.Context, req *proto.DeleteUserRequest) 
 }
 
 func (s *Service) CreateUserDetails(ctx context.Context, req *proto.CreateUserDetailsRequest) (*proto.CreateUserDetailsResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "CreateUserDetails"))
 	if !ValidateAlphabeticString(req.Name) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid name format")
 	}
@@ -128,6 +145,7 @@ func (s *Service) CreateUserDetails(ctx context.Context, req *proto.CreateUserDe
 
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -147,6 +165,7 @@ func (s *Service) CreateUserDetails(ctx context.Context, req *proto.CreateUserDe
 
 	details, err := s.Repo.CreateUserDetails(ctx, params)
 	if err != nil {
+		log.Error("Failed to create user details", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to create user details: %v", err)
 	}
 
@@ -167,12 +186,14 @@ func (s *Service) CreateUserDetails(ctx context.Context, req *proto.CreateUserDe
 }
 
 func (s *Service) UpdateUserName(ctx context.Context, req *proto.UpdateUserNameRequest) (*proto.UpdateUserNameResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "UpdateUserName"))
 	if !ValidateAlphabeticString(req.Name) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid name format")
 	}
 
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -182,8 +203,10 @@ func (s *Service) UpdateUserName(ctx context.Context, req *proto.UpdateUserNameR
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User details not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user details not found")
 		}
+		log.Error("Failed to update user name", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to update user name: %v", err)
 	}
 
@@ -204,12 +227,14 @@ func (s *Service) UpdateUserName(ctx context.Context, req *proto.UpdateUserNameR
 }
 
 func (s *Service) UpdateUserSurname(ctx context.Context, req *proto.UpdateUserSurnameRequest) (*proto.UpdateUserSurnameResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "UpdateUserSurname"))
 	if !ValidateAlphabeticString(req.Surname) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid surname format")
 	}
 
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -219,8 +244,10 @@ func (s *Service) UpdateUserSurname(ctx context.Context, req *proto.UpdateUserSu
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User details not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user details not found")
 		}
+		log.Error("Failed to update user surname", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to update user surname: %v", err)
 	}
 
@@ -241,12 +268,14 @@ func (s *Service) UpdateUserSurname(ctx context.Context, req *proto.UpdateUserSu
 }
 
 func (s *Service) UpdateUserPatronymic(ctx context.Context, req *proto.UpdateUserPatronymicRequest) (*proto.UpdateUserPatronymicResponse, error) {
-	if req.Patronymic != nil && !ValidateAlphabeticString(*req.Patronymic) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "UpdateUserPatronymic"))
+	if !ValidateAlphabeticString(req.Patronymic) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid patronymic format")
 	}
 
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -254,18 +283,18 @@ func (s *Service) UpdateUserPatronymic(ctx context.Context, req *proto.UpdateUse
 		UserUuid: userUUID,
 	}
 
-	if req.Patronymic != nil {
-		params.Patronymic = pgtype.Text(sql.NullString{
-			String: *req.Patronymic,
-			Valid:  true,
-		})
-	}
+	params.Patronymic = pgtype.Text(sql.NullString{
+		String: req.Patronymic,
+		Valid:  true,
+	})
 
 	details, err := s.Repo.UpdateUserPatronymic(ctx, params)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User details not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user details not found")
 		}
+		log.Error("Failed to update user patronymic", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to update user patronymic: %v", err)
 	}
 
@@ -286,12 +315,14 @@ func (s *Service) UpdateUserPatronymic(ctx context.Context, req *proto.UpdateUse
 }
 
 func (s *Service) UpdateUserGroupCode(ctx context.Context, req *proto.UpdateUserGroupCodeRequest) (*proto.UpdateUserGroupCodeResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "UpdateUserGroupCode"))
 	if !ValidateGroupCode(req.GroupCode) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid group code format")
 	}
 
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -301,8 +332,10 @@ func (s *Service) UpdateUserGroupCode(ctx context.Context, req *proto.UpdateUser
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User details not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user details not found")
 		}
+		log.Error("Failed to update user group code", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to update user group code: %v", err)
 	}
 
@@ -323,6 +356,7 @@ func (s *Service) UpdateUserGroupCode(ctx context.Context, req *proto.UpdateUser
 }
 
 func (s *Service) CreateUserContacts(ctx context.Context, req *proto.CreateUserContactsRequest) (*proto.CreateUserContactsResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "CreateUserContacts"))
 	if !ValidatePhoneNumber(req.PhoneNumber) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid phone number format")
 	}
@@ -333,6 +367,7 @@ func (s *Service) CreateUserContacts(ctx context.Context, req *proto.CreateUserC
 
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -357,6 +392,7 @@ func (s *Service) CreateUserContacts(ctx context.Context, req *proto.CreateUserC
 
 	contacts, err := s.Repo.CreateUserContacts(ctx, params)
 	if err != nil {
+		log.Error("Failed to create user contacts", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to create user contacts: %v", err)
 	}
 
@@ -379,12 +415,14 @@ func (s *Service) CreateUserContacts(ctx context.Context, req *proto.CreateUserC
 }
 
 func (s *Service) UpdateUserPhoneNumber(ctx context.Context, req *proto.UpdateUserPhoneNumberRequest) (*proto.UpdateUserPhoneNumberResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "UpdateUserPhoneNumber"))
 	if !ValidatePhoneNumber(req.PhoneNumber) {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid phone number format")
 	}
 
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -394,8 +432,10 @@ func (s *Service) UpdateUserPhoneNumber(ctx context.Context, req *proto.UpdateUs
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User contacts not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user contacts not found")
 		}
+		log.Error("Failed to update phone number", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to update phone number: %v", err)
 	}
 
@@ -418,8 +458,10 @@ func (s *Service) UpdateUserPhoneNumber(ctx context.Context, req *proto.UpdateUs
 }
 
 func (s *Service) UpdateUserEmail(ctx context.Context, req *proto.UpdateUserEmailRequest) (*proto.UpdateUserEmailResponse, error) {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "UpdateUserEmail"))
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -427,18 +469,18 @@ func (s *Service) UpdateUserEmail(ctx context.Context, req *proto.UpdateUserEmai
 		UserUuid: userUUID,
 	}
 
-	if req.Email != nil {
-		params.Email = pgtype.Text(sql.NullString{
-			String: *req.Email,
-			Valid:  true,
-		})
-	}
+	params.Email = pgtype.Text(sql.NullString{
+		String: req.Email,
+		Valid:  true,
+	})
 
 	contacts, err := s.Repo.UpdateUserEmail(ctx, params)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User contacts not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user contacts not found")
 		}
+		log.Error("Failed to update email", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to update email: %v", err)
 	}
 
@@ -461,12 +503,14 @@ func (s *Service) UpdateUserEmail(ctx context.Context, req *proto.UpdateUserEmai
 }
 
 func (s *Service) UpdateUserTelegramID(ctx context.Context, req *proto.UpdateUserTelegramIDRequest) (*proto.UpdateUserTelegramIDResponse, error) {
-	if req.TelegramId != nil && *req.TelegramId <= 0 {
+	log := s.Logger.With(zap.String("user_uuid", req.UserUuid), zap.String("method", "UpdateUserTelegramID"))
+	if !ValidateTelegramID(int(req.TelegramId)) {
 		return nil, status.Errorf(codes.InvalidArgument, "telegram ID must be positive")
 	}
 
 	userUUID, err := uuid.Parse(req.UserUuid)
 	if err != nil {
+		log.Warn("Failed to parse uuid", zap.Error(err))
 		return nil, status.Errorf(codes.InvalidArgument, "invalid UUID format: %v", err)
 	}
 
@@ -474,18 +518,18 @@ func (s *Service) UpdateUserTelegramID(ctx context.Context, req *proto.UpdateUse
 		UserUuid: userUUID,
 	}
 
-	if req.TelegramId != nil {
-		params.TelegramID = pgtype.Int8(sql.NullInt64{
-			Int64: *req.TelegramId,
-			Valid: true,
-		})
-	}
+	params.TelegramID = pgtype.Int8(sql.NullInt64{
+		Int64: req.TelegramId,
+		Valid: true,
+	})
 
 	contacts, err := s.Repo.UpdateUserTelegramID(ctx, params)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			log.Warn("User contacts not found", zap.Error(err))
 			return nil, status.Errorf(codes.NotFound, "user contacts not found")
 		}
+		log.Error("Failed to update telegram ID", zap.Error(err))
 		return nil, status.Errorf(codes.Internal, "failed to update telegram ID: %v", err)
 	}
 
