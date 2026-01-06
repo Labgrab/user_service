@@ -121,3 +121,25 @@ func TestValidatePhoneNumber(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateTelegramID(t *testing.T) {
+	tests := []struct {
+		name  string
+		input int
+		want  bool
+	}{
+		{name: "valid ID", input: 1234567890, want: true},
+
+		{name: "less than 1", input: 0, want: false},
+		{name: "negative number", input: -1, want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := service.ValidateTelegramID(tt.input)
+			if got != tt.want {
+				t.Errorf("ValidateTelegramID(%d) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
+	}
+}

@@ -17,3 +17,7 @@ func ValidateGroupCode(groupCode string) bool {
 func ValidatePhoneNumber(phoneNumber string) bool {
 	return phoneNumberRegexp.MatchString(phoneNumber)
 }
+
+func ValidateTelegramID(telegramID int) bool {
+	return telegramID > 0
+}
