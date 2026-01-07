@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 )
 
 type Config struct {
@@ -33,7 +33,7 @@ func InitTracer(cfg *Config) (*sdktrace.TracerProvider, error) {
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceName(cfg.ServiceName),
-			semconv.DeploymentEnvironment(cfg.Environment),
+			semconv.DeploymentEnvironmentName(cfg.Environment),
 		),
 	)
 
