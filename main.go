@@ -9,17 +9,15 @@ import (
 	"labgrab/user_service/pkg/config"
 	"log"
 	"net"
-	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	fmt.Println(os.Getenv("PORT"))
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -28,12 +26,12 @@ func main() {
 		log.Fatalf("Failed to parse .env: %v", err)
 	}
 
-	pgconfig, err := pgx.ParseConfig(cfg.DBConn)
+	pgconfig, err := pgxpool.ParseConfig(cfg.DBConn)
 	if err != nil {
 		log.Fatalf("Failed to parse DB connection string: %v", err)
 	}
 
-	conn, err := pgx.ConnectConfig(ctx, pgconfig)
+	conn, err := pgxpool.NewWithConfig(ctx, pgconfig)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v", err)
 	}
@@ -47,18 +45,15 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+	)
 	proto.RegisterUserServiceServer(s, svc)
 
 	go func() {
 		<-ctx.Done()
-		timeoutCtx, timeoutCancel := context.WithTimeout(context.Background(), time.Second*10)
-		defer timeoutCancel()
-
 		s.GracefulStop()
-		if err := conn.Close(timeoutCtx); err != nil {
-			log.Fatalf("failed to close DB connection: %v", err)
-		}
+		conn.Close()
 	}()
 
 	log.Println("server started")
